@@ -45,17 +45,32 @@ namespace HTTPServer
         /// <returns>True if parsing succeeds, false otherwise.</returns>
         public bool ParseRequest()
         {
-            throw new NotImplementedException();
-
             //TODO: parse the receivedRequest using the \r\n delimeter   
-
+            string[] stringSeparators = new string[] { "\r\n" };
+            requestLines = requestString.Split(stringSeparators, StringSplitOptions.None);
             // check that there is atleast 3 lines: Request line, Host Header, Blank line (usually 4 lines with the last empty line for empty content)
-
+            if(requestLines[2] == null){
+                return false;
+            };
             // Parse Request line
-
+            string[] requestLine = requestLines[0].Split(' ');
             // Validate blank line exists
-
+            if (requestLines[2] == "")
+            {
+                return false;
+            }
             // Load header lines into HeaderLines dictionary
+            headerLines = new Dictionary<string, string>();
+            for (int i = 1; i < requestLines.Length - 1; i++)
+            {
+                string[] headerLine = requestLines[i].Split(':');
+                if (headerLine.Length != 2)
+                {
+                    return false;
+                }
+                headerLines.Add(headerLine[0], headerLine[1]);
+            }
+            return true;
         }
 
         private bool ParseRequestLine()
@@ -75,7 +90,7 @@ namespace HTTPServer
 
         private bool ValidateBlankLine()
         {
-            throw new NotImplementedException();
+            return true;
         }
 
     }
