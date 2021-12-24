@@ -45,52 +45,96 @@ namespace HTTPServer
         /// <returns>True if parsing succeeds, false otherwise.</returns>
         public bool ParseRequest()
         {
-            //TODO: parse the receivedRequest using the \r\n delimeter   
+            //parse the receivedRequest using the \r\n delimeter   
             string[] stringSeparators = new string[] { "\r\n" };
             requestLines = requestString.Split(stringSeparators, StringSplitOptions.None);
             // check that there is atleast 3 lines: Request line, Host Header, Blank line (usually 4 lines with the last empty line for empty content)
-            if(requestLines[2] == null){
-                return false;
-            };
+            if(requestLines[1].ToLower().Contains("host: ") == false) return false;
             // Parse Request line
-            string[] requestLine = requestLines[0].Split(' ');
+            if(ParseRequestLine() == false) return false;
             // Validate blank line exists
-            if (requestLines[2] == "")
-            {
-                return false;
-            }
-            // Load header lines into HeaderLines dictionary
-            headerLines = new Dictionary<string, string>();
-            for (int i = 1; i < requestLines.Length - 1; i++)
-            {
-                string[] headerLine = requestLines[i].Split(':');
-                if (headerLine.Length != 2)
-                {
-                    return false;
-                }
-                headerLines.Add(headerLine[0], headerLine[1]);
-            }
+            if (ValidateBlankLine() == false) return false;
+           // Load header lines into HeaderLines dictionary
+            LoadHeaderLines();
             return true;
         }
 
         private bool ParseRequestLine()
         {
-            throw new NotImplementedException();
+            try
+            {
+                string[] M_P_V = requestLines[0].Split(' ');
+                if ((M_P_V[0] == "GET") || (M_P_V[0] == "POST") || (M_P_V[0] == "HEAD"))
+                {
+                    switch (M_P_V[0])
+                    {
+                        case "GET": method = RequestMethod.GET; break;
+                        case "POST": method = RequestMethod.POST; break;
+                        case "HEAD": method = RequestMethod.HEAD; break;
+                    }
+                }
+                else
+                    return false;
+                if (!ValidateIsURI(M_P_V[1]))
+                {
+                    return false;
+                }
+                if (M_P_V[2] == "HTTP/1.0" || M_P_V[2] == "HTTP/1.1" || M_P_V[2] == "")
+                {
+                    switch (M_P_V[2])
+                    {
+                        case "HTTP/1.0": httpVersion = HTTPVersion.HTTP10; break;
+                        case "HTTP/1.1": httpVersion = HTTPVersion.HTTP11; break;
+                        case "": httpVersion = HTTPVersion.HTTP09; break;
+                    }
+
+                }
+                else
+                    return false;
+
+                return true; //return true if all is good
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private bool ValidateIsURI(string uri)
         {
-            return Uri.IsWellFormedUriString(uri, UriKind.RelativeOrAbsolute);
+             if (uri.First() == '/')
+            {
+                relativeURI = uri;
+                return true;
+            }
+            return false;
         }
 
         private bool LoadHeaderLines()
         {
-            throw new NotImplementedException();
+            foreach (string line in requestLines)
+            {
+                if (line.Contains("GET") || line.Contains("HEAD") || line.Contains("POST"))
+                    continue;
+                string[] HEADERS = line.Split(new string[] { " " }, StringSplitOptions.None);
+                headerLines.Add(HEADERS[0], HEADERS[1]);
+            }
+            return true;
         }
 
         private bool ValidateBlankLine()
         {
-            return true;
+            try
+            { 
+                string[] BlankLineCheck = new string[] { "\r\n\r\n" };
+                contentbreaker = requestString.Split(BlankLineCheck, StringSplitOptions.None);
+                contentLines = contentbreaker[1].Split(';');
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
     }
