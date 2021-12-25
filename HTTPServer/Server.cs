@@ -20,6 +20,8 @@ namespace HTTPServer
             this.LoadRedirectionRules(redirectionMatrixPath);
             //TODO: initialize this.serverSocket
             this.serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            IPEndPoint endPoint= new IPEndPoint(IPAddress.Any,portNumber);
+            this.serverSocket.Bind(endPoint);
         }
 
         public void StartServer()
@@ -31,10 +33,8 @@ namespace HTTPServer
             {
                 //TODO: accept connections and start thread for each accepted connection.
                 Socket clientSocket=this.serverSocket.Accept();
-
                 Thread newThread = new Thread(new ParameterizedThreadStart(HandleConnection));
                 newThread.Start(clientSocket);
-
             }
         }
 
@@ -85,7 +85,10 @@ namespace HTTPServer
             try
             {
                 //TODO: check for bad request 
+                if (request.ParseRequest())
+                {
 
+                }
                 //TODO: map the relativeURI in request to get the physical path of the resource.
 
                 //TODO: check for redirect
@@ -106,7 +109,7 @@ namespace HTTPServer
         private string GetRedirectionPagePathIFExist(string relativePath)
         {
             // using Configuration.RedirectionRules return the redirected page path if exists else returns empty
-            
+
             return string.Empty;
         }
 
@@ -129,6 +132,7 @@ namespace HTTPServer
             catch (Exception ex)
             {
                 // TODO: log exception using Logger class
+                Logger.LogException(ex);
                 Environment.Exit(1);
             }
         }
