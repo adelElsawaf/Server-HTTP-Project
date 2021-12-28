@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -112,14 +112,20 @@ namespace HTTPServer
 
         private bool LoadHeaderLines()
         {
-            foreach (string line in requestLines)
+            bool result = true;
+            headerLines = new Dictionary<string, string>();
+            for (int i = 1; i < requestLines.Length - 2; i++)
             {
-                if (line.Contains("GET") || line.Contains("HEAD") || line.Contains("POST"))
-                    continue;
-                string[] HEADERS = line.Split(new string[] { " " }, StringSplitOptions.None);
-                headerLines.Add(HEADERS[0], HEADERS[1]);
+                if (requestLines[i].Contains(":"))
+                {
+                    string[] splitch = { ": " };
+                    string[] request1 = requestLines[i].Split(splitch, StringSplitOptions.None);
+                    headerLines.Add(request1[0], request1[1]);
+
+                }
+                else result = false;
             }
-            return true;
+            return result;
         }
 
         private bool ValidateBlankLine()
@@ -127,7 +133,7 @@ namespace HTTPServer
             try
             { 
                 string[] BlankLineCheck = new string[] { "\r\n\r\n" };
-                contentbreaker = requestString.Split(BlankLineCheck, StringSplitOptions.None);
+                string[] contentbreaker = requestString.Split(BlankLineCheck, StringSplitOptions.None);
                 contentLines = contentbreaker[1].Split(';');
                 return true;
             }
@@ -138,4 +144,5 @@ namespace HTTPServer
         }
 
     }
+
 }
